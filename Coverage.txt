@@ -1,0 +1,18 @@
+Web API .Net 6
+HTTP GET POST PUT PATCH DELETE
+Downloading of file
+Error Handling and Logging
+Inversion Of Control and Dependency Injection
+Usage of Serilog Logging Service
+
+
+
+builder.services
+	-AddSingleton lifetime services created the first time they're created
+	-AddTransient lifetime services created each time they're requested. Great for lightweight and stateless services
+	-AddScoped lifetime services created once per request
+
+from https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection-usage
+-Transient services are always different, a new instance is created with every retrieval of the service.
+-Scoped services change only with a new scope, but are the same instance within a scope.
+-Singleton services are always the same, a new instance is only created once.
