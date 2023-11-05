@@ -1,7 +1,11 @@
-﻿using CityInfo.API.Models;
+﻿using AutoMapper;
+using CityInfo.API.Entities;
+using CityInfo.API.Models;
+using CityInfo.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mail;
+using System.Text.Json;
 
 namespace CityInfo.API.Controllers
 {
@@ -11,22 +15,50 @@ namespace CityInfo.API.Controllers
     [ApiController]
     public class CitiesController : ControllerBase
     {
-        [HttpGet]
-        public ActionResult<IEnumerable<CityDto>> GetCities()
+        private ICityInfoRepository _cityInfoRepository;
+        private readonly IMapper _mapper;
+        const int maxCitiesPageSize = 20;
+
+        public CitiesController(ICityInfoRepository cityInfoRepository, IMapper mapper)
         {
-            return Ok(CitiesDataStore.Current.Cities);
+            _cityInfoRepository = cityInfoRepository ?? throw new ArgumentException(nameof(cityInfoRepository));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        }
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<CityModel>>> GetCities(
+            string? name, 
+            string? searchQuery,
+            int pageNumber = 1,
+            int pageSize = 10)
+        {
+            if (pageSize > maxCitiesPageSize)
+                pageSize = maxCitiesPageSize;
+
+            var (cityEntities, paginationMetadata) = await _cityInfoRepository
+                .GetCitiesAsync(name, searchQuery, pageNumber, pageSize);
+
+            Response.Headers.Add("X-Pagination",
+                JsonSerializer.Serialize(paginationMetadata));
+
+            if (cityEntities == null) 
+                return NotFound();
+
+            return Ok(_mapper.Map<IEnumerable<CityModel>>(cityEntities));
         }
 
         [HttpGet("{Id}")]
-        public ActionResult<CityDto> GetCity(int Id)
+        public async Task<IActionResult> GetCityAsync(int Id, bool includePointsOfInterest = false)
         {
-            var result = CitiesDataStore.Current.Cities.Find(x => x.Id == Id);
-            if (result == null)
-            {
-                return NotFound();
-            }
+            var city = await _cityInfoRepository.GetCityAsync(Id, includePointsOfInterest); 
 
-            return Ok(result);
+            if (city == null) 
+                return NotFound();
+
+            if(includePointsOfInterest)
+                return Ok(_mapper.Map<CityDto>(city));
+
+            return Ok(_mapper.Map<CityModel>(city));
+
         }
     }
 }
