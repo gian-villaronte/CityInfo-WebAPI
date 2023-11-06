@@ -2,6 +2,7 @@
 using CityInfo.API.Entities;
 using CityInfo.API.Models;
 using CityInfo.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mail;
@@ -9,7 +10,10 @@ using System.Text.Json;
 
 namespace CityInfo.API.Controllers
 {
-    [Route("api/cities")]
+    [Route("api/v{version:apiVersion}/cities")]
+    [Authorize]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     //no need for it if we use this in middleware
     //app.UseEndpoints(endpoints => {  endpoints.MapControllers(); });
     [ApiController]
@@ -45,9 +49,18 @@ namespace CityInfo.API.Controllers
 
             return Ok(_mapper.Map<IEnumerable<CityModel>>(cityEntities));
         }
-
+        /// <summary>
+        /// Get a city by id
+        /// </summary>
+        /// <param name="Id">the id of the city</param>
+        /// <param name="includePointsOfInterest">Optional to include POI</param>
+        /// <returns>An IActionResult</returns>
+        /// <response code="200">Returns the requested city</response>
         [HttpGet("{Id}")]
-        public async Task<IActionResult> GetCityAsync(int Id, bool includePointsOfInterest = false)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetCity(int Id, bool includePointsOfInterest = false)
         {
             var city = await _cityInfoRepository.GetCityAsync(Id, includePointsOfInterest); 
 

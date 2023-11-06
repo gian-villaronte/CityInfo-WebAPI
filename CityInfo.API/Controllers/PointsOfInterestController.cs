@@ -2,6 +2,7 @@
 using CityInfo.API.Entities;
 using CityInfo.API.Models;
 using CityInfo.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,9 @@ using System.Collections.Generic;
 
 namespace CityInfo.API.Controllers
 {
-    [Route("api/cities/{cityId}/pointsofinterest")]
+    [Route("api/v{version:apiVersion}/cities/{cityId}/pointsofinterest")]
+    [Authorize(Policy = "MustBeFromParis")]
+    [ApiVersion("2.0")]
     [ApiController]
     public class PointsOfInterestController : ControllerBase
     {
@@ -34,6 +37,11 @@ namespace CityInfo.API.Controllers
         {
             try
             {
+                var cityName = User.Claims.FirstOrDefault(x => x.Type == "city")?.Value;
+
+                if (!await _cityInfoRepository.CityNameMatchesCityId(cityName, cityId))
+                    return Forbid();
+
                 if (!await _cityInfoRepository.CityExistsAsync(cityId))
                 { 
                     _logger.LogInformation($"City with Id {cityId} wasn't found when accessing points of interest.");

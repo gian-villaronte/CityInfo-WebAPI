@@ -8,7 +8,10 @@ Usage of Object Relational Mapping (ORM)
 Repository Pattern in ORM (interfaces)
 ORM Filtering and Searching functionality
 Pagination (helps performance)
-
+JWT Token Authentication (Bearer Token)
+Authorization Policies
+Versioning
+API Documentation by Swashbuckle
 
 
 builder.services
@@ -24,3 +27,5 @@ from https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injecti
 
 When providing the connection string in production environment, it is unsafe to put it in appsettings. thats fine for development but when on prod,
 safest place to put it is in Azure Vault Key or the Systems environment variables. those are outside the solution file for safekeeping
+
+Authentication token based standards should use something like OAuth2 or OpenID Connect for better security when used in big enterprise apps
